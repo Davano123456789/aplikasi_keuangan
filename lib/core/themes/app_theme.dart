@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const primaryColor = Color(0xFF6366F1); // Indigo
+  static const primaryColor = Color(0xFF193177); // Dark Blue
+  static const secondaryPrimaryColor = Color(0xFF03B8E4); // Light Blue
   static const secondaryColor = Color(0xFF10B981); // Emerald
   static const backgroundColor = Color(0xFFF8FAFC);
   static const cardColor = Colors.white;
   static const textColor = Color(0xFF1E293B);
+
+  static const primaryGradient = LinearGradient(
+    colors: [primaryColor, secondaryPrimaryColor],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,

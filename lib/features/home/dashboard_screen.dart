@@ -96,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 48),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
+        gradient: AppTheme.primaryGradient,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(40),
           bottomRight: Radius.circular(40),

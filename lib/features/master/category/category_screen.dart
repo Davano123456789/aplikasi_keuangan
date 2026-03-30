@@ -142,7 +142,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit_rounded, size: 20, color: Colors.grey),
+              icon: const Icon(Icons.edit_rounded, size: 20, color: AppTheme.primaryColor),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
@@ -154,7 +154,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.redAccent),
+              icon: const Icon(Icons.delete_rounded, size: 20, color: Colors.redAccent),
               onPressed: () => _deleteCategory(category),
             ),
           ],

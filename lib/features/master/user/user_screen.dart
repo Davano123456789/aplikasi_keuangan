@@ -159,7 +159,7 @@ class _UserScreenState extends State<UserScreen> {
           title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(user.email, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
           trailing: IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+            icon: const Icon(Icons.delete_rounded, color: Colors.redAccent),
             onPressed: () => _confirmDelete(user),
           ),
         ),

@@ -77,13 +77,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 100,
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        'Finanku',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
-                            ),
+                      ShaderMask(
+                        shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(
+                          Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                        ),
+                        child: Text(
+                          'Finanku',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -134,9 +139,30 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 24),
                       _isLoading
                           ? const Center(child: CircularProgressIndicator())
-                          : ElevatedButton(
-                              onPressed: _handleLogin,
-                              child: const Text('Masuk'),
+                          : Container(
+                              decoration: BoxDecoration(
+                                gradient: AppTheme.primaryGradient,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _handleLogin,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text('Masuk', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
                             ),
                       const SizedBox(height: 16),
                     ],
