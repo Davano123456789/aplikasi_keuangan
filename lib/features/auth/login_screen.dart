@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -31,10 +31,10 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
         _errorMessage = null;
       });
-      
+
       final result = await AuthService.login(
-        _emailController.text, 
-        _passwordController.text
+        _usernameController.text,
+        _passwordController.text,
       );
 
       setState(() => _isLoading = false);
@@ -43,7 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (result['success']) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+            MaterialPageRoute(
+              builder: (context) => const MainNavigationScreen(),
+            ),
           );
         } else {
           setState(() => _errorMessage = result['message']);
@@ -72,19 +74,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Image.asset(
-                        'assets/icon/Finanku.png',
-                        height: 100,
-                      ),
+                      Image.asset('assets/icon/Finanku.png', height: 100),
                       const SizedBox(height: 24),
                       ShaderMask(
-                        shaderCallback: (bounds) => AppTheme.primaryGradient.createShader(
-                          Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-                        ),
+                        shaderCallback: (bounds) =>
+                            AppTheme.primaryGradient.createShader(
+                              Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                            ),
                         child: Text(
                           'Finanku',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -98,15 +99,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 48),
                       TextFormField(
-                        controller: _emailController,
+                        controller: _usernameController,
                         decoration: const InputDecoration(
-                          hintText: 'Email',
-                          prefixIcon: Icon(Icons.email_outlined),
+                          hintText: 'Username',
+                          prefixIcon: Icon(Icons.person_outline),
                         ),
-                        keyboardType: TextInputType.emailAddress,
+                        keyboardType: TextInputType.text,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Silakan masukkan email';
+                            return 'Silakan masukkan username';
                           }
                           return null;
                         },
@@ -120,7 +121,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                             ),
                             onPressed: () {
                               setState(() {
@@ -145,7 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppTheme.primaryColor.withOpacity(0.3),
+                                    color: AppTheme.primaryColor.withOpacity(
+                                      0.3,
+                                    ),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -161,7 +166,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text('Masuk', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                       const SizedBox(height: 16),
@@ -189,7 +200,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.redAccent.shade400,
                     borderRadius: BorderRadius.circular(12),
@@ -203,7 +217,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: Colors.white),
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.white,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -215,7 +232,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
                         onPressed: () => setState(() => _errorMessage = null),
                       ),
                     ],

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../../core/services/api_service.dart';
 
 class AuthService {
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<Map<String, dynamic>> login(String username, String password) async {
     final url = Uri.parse('${ApiService.baseUrl}/login');
     
     try {
@@ -11,9 +11,9 @@ class AuthService {
         url,
         headers: await ApiService.getHeaders(),
         body: jsonEncode({
-          'email': email,
+          'username': username,
           'password': password,
-          'device_name': 'flutter_web', // Sesuai kebutuhan API Laravel
+          'device_name': 'flutter_app', // Sesuai kebutuhan API Laravel
         }),
       );
 
@@ -21,12 +21,15 @@ class AuthService {
 
       if (response.statusCode == 200) {
         await ApiService.saveToken(data['token']);
-        // Anda bisa simpan data user juga jika perlu
+        final userJson = data['user'];
+        if (userJson != null && userJson['role'] != null) {
+          await ApiService.saveRole(userJson['role']);
+        }
         return {'success': true, 'data': data};
       } else {
         return {
           'success': false, 
-          'message': data['message'] ?? 'Gagal login. Periksa kembali email dan password.'
+          'message': data['message'] ?? 'Gagal login. Periksa kembali username dan password.'
         };
       }
     } catch (e) {
