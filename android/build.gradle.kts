@@ -17,6 +17,14 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    project.pluginManager.withPlugin("java") {
+        project.extensions.configure<JavaPluginExtension>("java") {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(21))
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

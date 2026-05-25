@@ -1,10 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Ganti sesuai dengan IP/alamat Laravel lokal Anda
-  // Jika di Chrome/Web: http://localhost:8000/api
-  // Jika di Emulator Android: http://10.0.2.2:8000/api
-  static const String baseUrl = 'https://keuangan-production-25fe.up.railway.app/api';
+  static String get baseUrl => 'https://finance.dsmgroup.co.id/api';
 
   static Future<Map<String, String>> getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -22,9 +19,20 @@ class ApiService {
     await prefs.setString('auth_token', token);
   }
 
+  static Future<void> saveRole(String role) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_role', role);
+  }
+
+  static Future<String> getRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_role') ?? 'user';
+  }
+
   static Future<void> clearAuth() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('user_role');
     await prefs.remove('user_data');
   }
 

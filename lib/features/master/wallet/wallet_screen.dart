@@ -6,6 +6,7 @@ import '../../../core/models/wallet_model.dart';
 import 'package:intl/intl.dart';
 import '../../../core/themes/app_theme.dart';
 import '../../../core/utils/auth_helper.dart';
+import '../../../core/services/api_service.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -17,11 +18,22 @@ class WalletScreen extends StatefulWidget {
 class _WalletScreenState extends State<WalletScreen> {
   List<WalletModel> _wallets = [];
   bool _isLoading = true;
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
+    _checkRole();
     _fetchWallets();
+  }
+
+  void _checkRole() async {
+    final role = await ApiService.getRole();
+    if (mounted) {
+      setState(() {
+        _isAdmin = role == 'admin';
+      });
+    }
   }
 
   Future<void> _fetchWallets() async {
@@ -99,18 +111,20 @@ class _WalletScreenState extends State<WalletScreen> {
                       ],
                     ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddWalletScreen()),
-          );
-          if (result == true) {
-            _fetchWallets();
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _isAdmin
+          ? FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddWalletScreen()),
+                );
+                if (result == true) {
+                  _fetchWallets();
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 

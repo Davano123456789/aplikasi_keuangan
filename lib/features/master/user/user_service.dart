@@ -51,6 +51,7 @@ class UserService {
     required String name,
     required String email,
     required String password,
+    List<int>? walletIds,
   }) async {
     final url = Uri.parse('${ApiService.baseUrl}/users');
     
@@ -59,9 +60,10 @@ class UserService {
         url,
         headers: await ApiService.getHeaders(),
         body: json.encode({
-          'name': name,
-          'email': email,
+          'username': name,
+          'role': email,
           'password': password,
+          'wallet_ids': walletIds ?? [],
         }),
       );
 
@@ -70,6 +72,42 @@ class UserService {
         return {'success': true, 'message': data['message'], 'data': data['data']};
       } else {
         return {'success': false, 'message': data['message'] ?? 'Gagal menambahkan akun pegawai'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan koneksi: $e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> update({
+    required int id,
+    required String name,
+    required String email,
+    String? password,
+    List<int>? walletIds,
+  }) async {
+    final url = Uri.parse('${ApiService.baseUrl}/users/$id');
+    
+    try {
+      final Map<String, dynamic> bodyMap = {
+        'username': name,
+        'role': email,
+        'wallet_ids': walletIds ?? [],
+      };
+      if (password != null && password.isNotEmpty) {
+        bodyMap['password'] = password;
+      }
+
+      final response = await http.put(
+        url,
+        headers: await ApiService.getHeaders(),
+        body: json.encode(bodyMap),
+      );
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        return {'success': true, 'message': data['message'], 'data': data['data']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Gagal memperbarui data pegawai'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan koneksi: $e'};

@@ -5,6 +5,7 @@ import 'user_service.dart';
 import 'add_user_screen.dart';
 import 'user_detail_screen.dart';
 import '../../../core/utils/auth_helper.dart';
+import '../../../core/services/api_service.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -16,11 +17,22 @@ class UserScreen extends StatefulWidget {
 class _UserScreenState extends State<UserScreen> {
   List<UserModel> _users = [];
   bool _isLoading = true;
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
+    _checkRole();
     _fetchUsers();
+  }
+
+  void _checkRole() async {
+    final role = await ApiService.getRole();
+    if (mounted) {
+      setState(() {
+        _isAdmin = role == 'admin';
+      });
+    }
   }
 
   Future<void> _fetchUsers() async {
@@ -102,16 +114,18 @@ class _UserScreenState extends State<UserScreen> {
                       },
                     ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddUserScreen()),
-          );
-          if (result == true) _fetchUsers();
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _isAdmin
+          ? FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddUserScreen()),
+                );
+                if (result == true) _fetchUsers();
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -141,13 +155,14 @@ class _UserScreenState extends State<UserScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => UserDetailScreen(userId: user.id),
             ),
           );
+          _fetchUsers();
         },
         borderRadius: BorderRadius.circular(16),
         child: ListTile(
@@ -157,11 +172,38 @@ class _UserScreenState extends State<UserScreen> {
             child: const Icon(Icons.person_rounded, color: AppTheme.primaryColor),
           ),
           title: Text(user.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(user.email, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete_rounded, color: Colors.redAccent),
-            onPressed: () => _confirmDelete(user),
+          subtitle: Container(
+            margin: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: user.email == 'admin'
+                        ? Colors.purple.shade50
+                        : Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    user.email == 'admin' ? 'Administrator' : 'Pegawai',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: user.email == 'admin'
+                          ? Colors.purple.shade700
+                          : Colors.blue.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          trailing: _isAdmin
+              ? IconButton(
+                  icon: const Icon(Icons.delete_rounded, color: Colors.redAccent),
+                  onPressed: () => _confirmDelete(user),
+                )
+              : null,
         ),
       ),
     );

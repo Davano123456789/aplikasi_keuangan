@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'user_service.dart';
 import '../../../core/themes/app_theme.dart';
+import '../../../core/models/user_model.dart';
+import '../../../core/models/wallet_model.dart';
+import '../wallet/wallet_service.dart';
 
 class AddUserScreen extends StatefulWidget {
-  const AddUserScreen({super.key});
+  final UserModel? user;
+  const AddUserScreen({super.key, this.user});
 
   @override
   State<AddUserScreen> createState() => _AddUserScreenState();
@@ -12,21 +16,65 @@ class AddUserScreen extends StatefulWidget {
 class _AddUserScreenState extends State<AddUserScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String _selectedRole = 'user';
+  List<WalletModel> _allWallets = [];
+  List<int> _selectedWalletIds = [];
   bool _isSaving = false;
+  bool _isLoadingWallets = false;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.user != null) {
+      _nameController.text = widget.user!.name;
+      _selectedRole = widget.user!.email; // email is role
+      _selectedWalletIds = widget.user!.wallets.map((w) => w.id).toList();
+    }
+    _fetchWallets();
+  }
+
+  void _fetchWallets() async {
+    setState(() => _isLoadingWallets = true);
+    try {
+      final wallets = await WalletService.getWallets();
+      setState(() {
+        _allWallets = wallets;
+        _isLoadingWallets = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingWallets = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil data dompet: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   void _saveUser() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isSaving = true);
       
       try {
-        final result = await UserService.store(
-          name: _nameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+        final Map<String, dynamic> result;
+        if (widget.user == null) {
+          result = await UserService.store(
+            name: _nameController.text,
+            email: _selectedRole,
+            password: _passwordController.text,
+            walletIds: _selectedRole == 'user' ? _selectedWalletIds : [],
+          );
+        } else {
+          result = await UserService.update(
+            id: widget.user!.id,
+            name: _nameController.text,
+            email: _selectedRole,
+            password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+            walletIds: _selectedRole == 'user' ? _selectedWalletIds : [],
+          );
+        }
 
         setState(() => _isSaving = false);
 
@@ -55,10 +103,11 @@ class _AddUserScreenState extends State<AddUserScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEdit = widget.user != null;
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Tambah Pegawai'),
+        title: Text(isEdit ? 'Edit Pegawai' : 'Tambah Pegawai'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -69,40 +118,113 @@ class _AddUserScreenState extends State<AddUserScreen> {
             children: [
               _buildTextField(
                 controller: _nameController,
-                label: 'Nama Lengkap',
+                label: 'Username',
                 icon: Icons.person_outline_rounded,
-                validator: (v) => (v == null || v.isEmpty) ? 'Masukkan nama lengkap' : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Masukkan username' : null,
               ),
               const SizedBox(height: 20),
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email',
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) => (v == null || !v.contains('@')) ? 'Masukkan email valid' : null,
+              DropdownButtonFormField<String>(
+                value: _selectedRole,
+                decoration: _getInputDecoration('Role / Peran', Icons.badge_outlined),
+                items: const [
+                  DropdownMenuItem(value: 'user', child: Text('User / Pegawai')),
+                  DropdownMenuItem(value: 'admin', child: Text('Administrator')),
+                ],
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() {
+                      _selectedRole = val;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                decoration: _getInputDecoration('Password', Icons.lock_outline_rounded).copyWith(
+                decoration: _getInputDecoration(
+                  isEdit ? 'Password Baru (Kosongkan jika tidak diubah)' : 'Password',
+                  Icons.lock_outline_rounded,
+                ).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
-                validator: (v) => (v == null || v.length < 8) ? 'Password minimal 8 karakter' : null,
+                validator: (v) {
+                  if (isEdit && (v == null || v.isEmpty)) {
+                    return null;
+                  }
+                  if (v == null || v.length < 8) {
+                    return 'Password minimal 8 karakter';
+                  }
+                  return null;
+                },
               ),
+              if (_selectedRole == 'user') ...[
+                const SizedBox(height: 28),
+                const Text(
+                  'Hak Akses Dompet',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Pilih dompet mana saja yang boleh diakses/dikelola oleh pegawai ini.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+                const SizedBox(height: 12),
+                _isLoadingWallets
+                    ? const Center(child: CircularProgressIndicator())
+                    : _allWallets.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Text('Belum ada data dompet', style: TextStyle(color: Colors.grey)),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _allWallets.length,
+                              separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade200),
+                              itemBuilder: (context, index) {
+                                final wallet = _allWallets[index];
+                                final isChecked = _selectedWalletIds.contains(wallet.id);
+                                return CheckboxListTile(
+                                  activeColor: AppTheme.primaryColor,
+                                  title: Text(wallet.name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                                  value: isChecked,
+                                  controlAffinity: ListTileControlAffinity.leading,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        _selectedWalletIds.add(wallet.id);
+                                      } else {
+                                        _selectedWalletIds.remove(wallet.id);
+                                      }
+                                    });
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+              ],
               const SizedBox(height: 48),
               ElevatedButton(
                 onPressed: _isSaving ? null : _saveUser,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isSaving 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Simpan Pegawai', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : Text(isEdit ? 'Simpan Perubahan' : 'Simpan Pegawai', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
