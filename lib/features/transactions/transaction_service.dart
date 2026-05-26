@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../../../core/services/api_service.dart';
 import '../../../core/models/transaction_model.dart';
@@ -50,6 +51,8 @@ class TransactionService {
     int? toWalletId,
     String? note,
     String? imagePath,
+    List<int>? imageBytes,
+    String? imageName,
   }) async {
     final url = Uri.parse('${ApiService.baseUrl}/transactions');
     
@@ -66,8 +69,18 @@ class TransactionService {
       if (toWalletId != null) request.fields['to_wallet_id'] = toWalletId.toString();
       if (note != null) request.fields['note'] = note;
 
-      if (imagePath != null) {
-        request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      if (kIsWeb) {
+        if (imageBytes != null && imageName != null) {
+          request.files.add(http.MultipartFile.fromBytes(
+            'image',
+            imageBytes,
+            filename: imageName,
+          ));
+        }
+      } else {
+        if (imagePath != null) {
+          request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+        }
       }
 
       final streamedResponse = await request.send();

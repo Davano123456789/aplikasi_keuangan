@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/models/transaction_model.dart';
-import '../../core/themes/app_theme.dart';
 import 'transaction_service.dart';
 import 'add_transaction_screen.dart';
 import 'transaction_detail_screen.dart';
@@ -243,24 +242,6 @@ class _TransactionScreenState extends State<TransactionScreen> with SingleTicker
                   style: TextStyle(color: Colors.grey.shade400, fontSize: 10),
                 ),
               ],
-            ),
-          ),
-          Positioned(
-            bottom: 4,
-            right: 4,
-            child: IconButton(
-              icon: const Icon(Icons.edit_note_rounded, size: 28, color: AppTheme.primaryColor),
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AddTransactionScreen(transaction: transaction),
-                  ),
-                );
-                if (result == true) {
-                  _fetchTransactions();
-                }
-              },
             ),
           ),
         ],
