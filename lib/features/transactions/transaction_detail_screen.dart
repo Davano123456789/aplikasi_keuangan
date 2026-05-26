@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:aplikasi_keuangan/core/models/transaction_model.dart';
-import 'package:aplikasi_keuangan/core/themes/app_theme.dart';
 import 'package:aplikasi_keuangan/features/transactions/transaction_service.dart';
-import 'package:aplikasi_keuangan/features/transactions/add_transaction_screen.dart';
 import 'package:aplikasi_keuangan/core/services/api_service.dart';
 import 'package:intl/intl.dart';
 
@@ -53,23 +51,6 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
       appBar: AppBar(
         title: const Text('Detail Transaksi'),
         elevation: 0,
-        actions: _transaction != null ? [
-          IconButton(
-            icon: const Icon(Icons.edit_rounded, color: AppTheme.primaryColor),
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AddTransactionScreen(transaction: _transaction),
-                ),
-              );
-              if (result == true) {
-                _fetchDetail();
-              }
-            },
-          ),
-          const SizedBox(width: 8),
-        ] : null,
       ),
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
@@ -193,10 +174,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   }
 
   Widget _buildImageSection(String imagePath) {
-    // Construct full URL. Laravel usually stores in storage/
-    // Assuming ApiService.baseUrl is .../api, we might need to go up one level
-    final baseUrl = ApiService.baseUrl.replaceAll('/api', '');
-    final imageUrl = imagePath.startsWith('http') ? imagePath : '$baseUrl/storage/$imagePath';
+    // Construct full URL. We route through the API proxy to bypass CORS issues on Web.
+    final String imageUrl;
+    if (imagePath.startsWith('http')) {
+      imageUrl = imagePath;
+    } else {
+      final filename = imagePath.split('/').last;
+      imageUrl = '${ApiService.baseUrl}/transactions/image/$filename';
+    }
 
     return Container(
       width: double.infinity,

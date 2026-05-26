@@ -9,6 +9,8 @@ import '../../core/themes/app_theme.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -29,6 +31,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   int? _fromWalletId;
   int? _toWalletId;
   String? _imagePath;
+  Uint8List? _imageBytes;
+  String? _imageName;
 
   bool get _isEditMode => widget.transaction != null;
 
@@ -109,6 +113,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             toWalletId: _toWalletId,
             note: _noteController.text,
             imagePath: _imagePath,
+            imageBytes: _imageBytes,
+            imageName: _imageName,
           );
         }
 
@@ -338,13 +344,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(File(_imagePath!), width: double.infinity, height: 150, fit: BoxFit.cover),
+                        child: kIsWeb
+                            ? Image.network(_imagePath!, width: double.infinity, height: 150, fit: BoxFit.cover)
+                            : Image.file(File(_imagePath!), width: double.infinity, height: 150, fit: BoxFit.cover),
                       ),
                       Positioned(
                         right: 8,
                         top: 8,
                         child: GestureDetector(
-                          onTap: () => setState(() => _imagePath = null),
+                          onTap: () => setState(() {
+                            _imagePath = null;
+                            _imageBytes = null;
+                            _imageName = null;
+                          }),
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
@@ -437,8 +449,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final XFile? image = await picker.pickImage(source: source, imageQuality: 70);
     
     if (image != null) {
+      final bytes = await image.readAsBytes();
       setState(() {
         _imagePath = image.path;
+        _imageBytes = bytes;
+        _imageName = image.name;
       });
     }
   }
